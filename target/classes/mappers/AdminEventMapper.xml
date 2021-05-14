@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gticket.mappers.AdminEventMapper">
+
+	<!-- 1차 카테고리 출력 코드를 null 처리, 10 -->
+	<select id="mainCGList" resultType="CategoryVO">
+		select cg_code, cg_code_prt, cg_name  from category_tbl
+		where  cg_code_prt is null
+	</select>
+	
+	<!-- 1차 카테고리에 해당하는 2차 카테고리 출력 -->
+	<select id="subCGList" resultType="CategoryVO" parameterType="string">
+		select cg_code, cg_code_prt, cg_name  from category_tbl
+		where cg_code_prt = #{cg_code}
+	</select>
+	
+	<!-- 검색 조건 : 공통으로 사용하는 구문 -->
+	<sql id="search">
+		<if test="searchType != null">
+		<!-- 상품명 -->
+		<if test="searchType =='evt_name'.toString()">
+			where evt_name like '%' || #{keyword} || '%'
+		</if>
+		<if test="searchType =='evt_num'.toString()">
+			where evt_num like '%' || #{keyword} || '%'
+		</if>
+		<if test="searchType =='evt_num'.toString()">
+			where evt_num like '%' || #{keyword} || '%'
+		</if>
+		<!-- 내용 -->
+		<if test ="searchType == 'evt_detail'.toString()">
+			where evt_detail like '%' || #{keyword} || '%'
+		</if>
+		<!-- 제조사 -->
+		<if test ="searchType == 'evt_company'.toString()">
+			where evt_company like '%' || #{keyword} || '%'
+		</if>
+		<!-- 상품명 + 내용 -->
+		<if test ="searchType == 'name_detail'.toString()">
+			where (evt_name like '%' || #{keyword} || '%')
+			or (evt_detail like '%' || #{keyword} || '%')
+		</if>
+		<!-- 상품명 + 제조사 -->
+		<if test ="searchType == 'name_company'.toString()">
+			where (evt_name like '%' || #{keyword} || '%')
+			or (evt_company like '%' || #{keyword} || '%')
+		</if>
+		<!-- 상품명 + 내용 + 제조사 -->
+		<if test ="searchType == 'all'.toString()">
+			where (evt_name like '%' || #{keyword} || '%')
+			or (evt_detail like '%' || #{keyword} || '%')
+			or (evt_company like '%' || #{keyword} || '%')
+		</if>
+		</if>
+	</sql>
+	
+	<!-- 상품 리스트(검색조건 포함) -->
+	<select id="searchListEvent" parameterType="SearchCriteria" resultType="EventVO">
+	SELECT 
+		evt_num
+		, cg_code
+		, cg_code_prt
+		, evt_name
+		, evt_price
+		, evt_discount
+		, evt_company
+		, evt_detail
+		, evt_img
+		, evt_amount
+		, evt_buy
+		, evt_open_ts
+		, evt_close_ts
+		, evt_date_sub
+		, evt_date_up
+	FROM (
+		SELECT 
+			evt_num
+			, cg_code
+			, cg_code_prt
+			, evt_name
+			, evt_price
+			, evt_discount
+			, evt_company
+			, evt_detail
+			, evt_img
+			, evt_amount
+			, evt_buy
+			, evt_open_ts
+			, evt_close_ts
+			, evt_date_sub
+			, evt_date_up
+			, row_number() over (order by evt_num DESC) p_seq 
+		FROM event_tbl
+		<include refid="search" />
+	)
+	WHERE 1=1
+		AND p_seq between #{rowStart} AND #{rowEnd}
+	</select>
+	
+	<!-- 상품 개수 (검색조건 포함) -->
+	<select id="searchListCount" parameterType="SearchCriteria" resultType="int">
+		<![CDATA[
+			select count(evt_num)
+			from event_tbl
+		]]>
+		<include refid="search" />
+	</select>
+	
+	<!-- 상품 정보 읽기 -->
+	<select id="eventDetail" parameterType="int" resultType="EventVO">
+		SELECT 
+			t1.evt_num
+			, t1.cg_code
+			, t1.cg_code_prt
+			, t1.evt_name
+			, t1.evt_price
+			, t1.evt_discount
+			, t1.evt_company
+			, t1.evt_detail
+			, t1.evt_img
+			, t1.evt_amount
+			, t1.evt_buy
+			, t1.evt_open_ts
+			, t1.evt_close_ts
+			, t1.evt_date_sub
+			, t1.evt_date_up
+		FROM event_tbl t1 
+		WHERE 1=1
+			AND t1.evt_num = #{evt_num}
+	</select>
+	
+	<!-- 상품 삭제 -->
+	<delete id="deleteEvent" parameterType="int">
+		DELETE event_tbl
+		WHERE evt_num = #{evt_num}
+	</delete>
+	
+	
+	<!-- 선택한 상품 수정 -->
+	<!-- java.util.Map -->
+	<update id="editChecked" parameterType="Map">
+		update event_tbl
+		set evt_amount=#{evt_amount}, evt_buy=#{evt_buy}, evt_date_up=sysdate
+		where evt_num=#{evt_num}
+	</update>
+		
+	<!-- 공연 저장 -->
+	<insert id="insertEvent" parameterType="EventVO">
+	insert into event_tbl(
+		evt_num
+		, cg_code
+		, cg_code_prt
+		, evt_name
+		, evt_price
+		, evt_discount
+		, evt_company
+		, evt_detail
+		, evt_img
+		, evt_amount
+		, evt_buy
+		, evt_open_ts
+		, evt_close_ts
+		, evt_date_sub
+		, evt_date_up
+	)
+	values (
+		seq_evt_num.nextval
+		, #{cg_code}
+		, #{cg_code_prt}
+		, #{evt_name}
+		, #{evt_price}
+		, #{evt_discount}
+		, #{evt_company}
+		, #{evt_detail}
+		, #{evt_img}
+		, #{evt_amount}
+		, #{evt_buy}
+		, TO_TIMESTAMP(#{evt_open_ts}, 'YYYY-MM-DD HH24:MI:SS')
+		, TO_TIMESTAMP(#{evt_close_ts}, 'YYYY-MM-DD HH24:MI:SS')
+		, sysdate
+		, sysdate
+	)
+	</insert>
+	<!-- 상품 수정 -->
+	<update id="editEvent" parameterType="EventVO">
+	UPDATE event_tbl
+	<set>
+        <if test="cg_code != null">cg_code=#{cg_code}</if>
+        <if test="cg_code_prt != null">, cg_code_prt=#{cg_code_prt}</if>
+        <if test="evt_name != null">, evt_name=#{evt_name}</if>
+        <if test="evt_price != null">, evt_price=#{evt_price}</if>
+        <if test="evt_discount != null">, evt_discount=#{evt_discount}</if>
+        <if test="evt_company != null">, evt_company=#{evt_company}</if>
+        <if test="evt_detail != null">, evt_detail=#{evt_detail}</if>
+        <if test="evt_img != null">, evt_img=#{evt_img}</if>
+        <if test="evt_amount != null">, evt_amount=#{evt_amount}</if>
+        <if test="evt_buy != null">, evt_buy=#{evt_buy}</if>
+        <if test="evt_open_ts != null">, evt_open_ts=TO_TIMESTAMP(#{evt_open_ts}, 'YYYY-MM-DD HH24:MI:SS')</if>
+        <if test="evt_close_ts != null">, evt_close_ts=TO_TIMESTAMP(#{evt_close_ts}, 'YYYY-MM-DD HH24:MI:SS')</if>
+        , evt_date_sub=sysdate
+    </set>
+	WHERE evt_num = #{evt_num}
+	</update>
+	
+	<update id="addevt_Discount" parameterType="EventVO">
+update event_tbl set evt_discount = #{evt_discount} where evt_num = #{evt_num}
+	</update>
+	
+	<update id="editStock" parameterType="EventVO">
+update event_tbl set evt_discount = evt_discount + #{evt_discount} where evt_num = #{evt_num}
+	</update>
+</mapper>
+
+ 
