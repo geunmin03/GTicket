@@ -4,7 +4,6 @@
 <%-- 포맷팅 관련 태그라이브러리(JSTL/fmt) --%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

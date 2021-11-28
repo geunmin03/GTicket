@@ -28,12 +28,12 @@ xsi:schemaLocation="http://www.springframework.org/schema/beans
 		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory" />
 	</bean>
 	
-	  <!-- JavaMailSenderImpl클래스를 bean객체로 설정시 메일버서의 정보를 구성해야 한다. Gmail계정정보를 사용(보안설정 낮게 ) -->
+	  <!-- JavaMailSenderImpl클래스를 bean객체로 설정시 메일서버의 정보를 구성해야 한다. Gmail계정정보를 사용(보안설정 낮게 ) -->
 	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
 	  <property name="host" value="smtp.gmail.com" />
 	  <property name="port" value="587" />
-	  <property name="username" value="hyeongseok715@gmail.com" />
-	  <property name="password" value="glasogudtjr.715" />
+	  <property name="username" value="geunmin03@gmail.com" />
+	  <property name="password" value="rmsals0312!!" />
 	  <property name="javaMailProperties">
 	  <props>
 	    <prop key="mail.smtp.auth">true</prop>

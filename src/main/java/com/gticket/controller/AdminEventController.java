@@ -49,7 +49,11 @@ import com.gticket.util.SearchCriteria;
 @RequestMapping("/admin/event/*")
 public class AdminEventController {
 
-	@Autowired
+//	  생성자
+//	  setter
+//	  필드
+	
+	@Autowired 
 	private AdminEventService service;
 
 	@Autowired
